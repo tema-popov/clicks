@@ -8,7 +8,6 @@ import re
 matplotlib.style.use('ggplot')
 
 # Read CSV. Convert all date records to ordinal representation
-
 first_cap_re = re.compile('(.)([A-Z][a-z]+)')
 all_cap_re = re.compile('([a-z0-9])([A-Z])')
 def convert(name):
@@ -24,7 +23,6 @@ clicks.date_from = pd.to_datetime(clicks.date_from).apply(to_ord)
 clicks.date_back = pd.to_datetime(clicks.date_back).apply(to_ord)
 
 # Replace all categorical variables with integral labels
-
 """
 from collections import defaultdict
 from sklearn.preprocessing import LabelEncoder
