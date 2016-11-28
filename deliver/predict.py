@@ -1,11 +1,11 @@
 import json
 import pandas as pd
-from train import to_binarize, to_scale, underscore
+from train import to_drop, to_binarize, to_scale, underscore
 
 def prepare_data(path):
     """Convert data to match the format used on training.
     """
-    clicks = pd.read_csv(path).rename(columns=underscore).drop('id', axis=1)
+    clicks = pd.read_csv(path).rename(columns=underscore).drop(to_drop, axis=1)
     with open('dummies.json') as f:
         tops = json.load(f)
     for feature in to_binarize:

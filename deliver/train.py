@@ -38,7 +38,8 @@ def add_dummies(dataset, features, top_ns):
         json.dump(tops, f)
     return copy
 
-to_binarize = ['iata_from', 'iata_to', 'iso_from', 'iso_to', 'ak_from', 
+to_drop = ['id', 'ak_from', 'ak_to']
+to_binarize = ['iata_from', 'iata_to', 'iso_from', 'iso_to', #'ak_from',
                'flight_class', 'combo', 'mobile', 'referer', 'combo_type']
 to_scale = ['date', 'price', 'total_price', 'a_days', 'days', 'date_from', 'date_back']
 
@@ -51,27 +52,15 @@ def prepare_data(path):
     5) binarize remaining categorical features
     6) scale numerical features
     """
-    clicks = pd.read_csv(path).rename(columns=underscore).drop('id', axis=1)
+    clicks = pd.read_csv(path).rename(columns=underscore).drop(to_drop, axis=1)
 
     to_ord = lambda dt: dt.toordinal()
     for date_col in [c for c in clicks.columns if c.startswith('date')]:
         clicks[date_col] = pd.to_datetime(clicks[date_col]).apply(to_ord)
 
-    prepared = add_dummies(clicks, to_binarize, [20] * 10)
+    prepared = add_dummies(clicks, to_binarize, [20] * len(to_binarize))
     prepared.drop(to_binarize, axis=1, inplace=True)
     prepared = prepared[prepared.total_price < 2000000]
-
-    """
-    feature_values = {}
-    for feature in to_binarize:
-        dummies = pd.get_dummies(prepared[feature], prefix=feature)
-        feature_values[feature] = []
-        for new_col in dummies.columns:
-            feature_values[feature].append(new_col[len(feature) + 1:])
-        prepared = pd.concat([prepared.drop(feature, axis=1), dummies], axis=1)
-    with open('dummies.json', 'w') as f:
-        json.dump(feature_values, f)
-    """
 
     mean_stds = {}
     for feature in to_scale:
@@ -87,7 +76,7 @@ def train(data):
     gbc = GradientBoostingClassifier(random_state=10, n_estimators=50, verbose=1)
     pipe = Pipeline([('selection', SelectPercentile()), ('gbc', gbc)])
     params = {'selection__percentile': range(60, 101, 10), 'gbc__max_depth': range(3, 8)}
-    gsearch = GridSearchCV(estimator=pipe, param_grid=params, scoring='log_loss', n_jobs=2, verbose=1)
+    gsearch = GridSearchCV(estimator=pipe, param_grid=params, scoring='log_loss', n_jobs=1, verbose=1)
     gsearch.fit(data.drop('book', axis=1), data.book)
     print(gsearch.cv_results_)
     return gsearch.best_estimator_
