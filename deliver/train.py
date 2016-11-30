@@ -86,5 +86,6 @@ if __name__ == '__main__':
     start = time.time()
     clicks = prepare_data(sys.argv[1])
     model = train(clicks)
+    model.fit(clicks.drop('book', axis=1), clicks.book)
     with open('model.pickle', 'wb') as f:
         pickle.dump(model, f)

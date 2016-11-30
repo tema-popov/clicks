@@ -29,7 +29,7 @@ def prepare_data(path):
 
     for feature in to_scale:
         mu, std = mean_stds[feature]
-        clicks[feature] = (clicks[feature] - mu) / std
+        clicks[feature] = (clicks[feature] - mu) / std if std != 0 else 0
     return clicks
 
 if __name__ == '__main__':
