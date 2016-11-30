@@ -1,4 +1,6 @@
+import sys
 import json
+import _pickle as pickle
 import pandas as pd
 from train import to_drop, to_binarize, to_scale, underscore
 
@@ -28,10 +30,12 @@ def prepare_data(path):
     for feature in to_scale:
         mu, std = mean_stds[feature]
         clicks[feature] = (clicks[feature] - mu) / std
-
-    print(list(clicks.columns))
-    print(clicks[:10])
-
+    return clicks
 
 if __name__ == '__main__':
-    prepare_data('click.csv')
+    clicks = prepare_data(sys.argv[1])
+    with open('model.pickle', 'rb') as f:
+        model = pickle.load(f)
+    probs = model.predict_proba(clicks.drop('book', axis=1))[:,1]
+    with open(sys.argv[2], 'w') as f:
+        f.write(str(list(probs)))

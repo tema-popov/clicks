@@ -1,6 +1,8 @@
 import re
+import sys
 import time
 import json
+import _pickle as pickle
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier
@@ -73,15 +75,16 @@ def prepare_data(path):
     return prepared
     
 def train(data):
-    gbc = GradientBoostingClassifier(random_state=10, n_estimators=50, verbose=1)
+    gbc = GradientBoostingClassifier(random_state=10, n_estimators=20, verbose=1)
     pipe = Pipeline([('selection', SelectPercentile()), ('gbc', gbc)])
-    params = {'selection__percentile': range(60, 101, 10), 'gbc__max_depth': range(3, 8)}
-    gsearch = GridSearchCV(estimator=pipe, param_grid=params, scoring='log_loss', n_jobs=1, verbose=1)
+    params = {'selection__percentile': range(60, 101, 10), 'gbc__max_depth': range(2, 8, 2)}
+    gsearch = GridSearchCV(estimator=pipe, param_grid=params, scoring='neg_log_loss', n_jobs=4, verbose=1, cv=2)
     gsearch.fit(data.drop('book', axis=1), data.book)
-    print(gsearch.cv_results_)
     return gsearch.best_estimator_
 
 if __name__ == '__main__':
     start = time.time()
-    clicks = prepare_data('click.csv')
-    train(clicks)
+    clicks = prepare_data(sys.argv[1])
+    model = train(clicks)
+    with open('model.pickle', 'wb') as f:
+        pickle.dump(model, f)
