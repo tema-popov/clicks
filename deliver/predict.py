@@ -14,10 +14,10 @@ def prepare_data(path):
         new_feature = lambda x: '{}_{}'.format(feature, x)
         top = tops[feature]
         for x in top:
-            clicks[new_feature(x)] = (clicks[feature] == x)
-        if len(clicks[feature].unique()) > len(top):
-            clicks[new_feature('other')] = 1 - sum(clicks[new_feature(col)] for col in top)
-
+            if x == 'other':
+                clicks[new_feature('other')] = 1 - sum(clicks[new_feature(col)] for col in top[:-1])
+            else:
+                clicks[new_feature(x)] = (clicks[feature] == x)
     to_ord = lambda dt: dt.toordinal()
     for date_col in [c for c in clicks.columns if c.startswith('date')]:
         clicks[date_col] = pd.to_datetime(clicks[date_col]).apply(to_ord)
@@ -38,4 +38,4 @@ if __name__ == '__main__':
         model = pickle.load(f)
     probs = model.predict_proba(clicks.drop('book', axis=1))[:,1]
     with open(sys.argv[2], 'w') as f:
-        f.write(str(list(probs)))
+        f.write("\n".join([str(prob) for prob in list(probs)]))

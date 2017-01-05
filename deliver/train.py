@@ -36,6 +36,7 @@ def add_dummies(dataset, features, top_ns):
             copy[new_feature(x)] = (dataset[feature] == x)
         if len(dataset[feature].unique()) > top_n:
             copy[new_feature('other')] = 1 - sum(copy[new_feature(col)] for col in top)
+            top.append('other')
     with open('dummies.json', 'w') as f:
         json.dump(tops, f)
     return copy
